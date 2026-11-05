@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FreundesRadar</title>
+<meta name="description" content="Die Abenteurer-Chronik eurer Gruppe in WoW Forever: Stufen, Ausrüstung, Berufe und Erfolge.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23fff0a8'/%3E%3Cstop offset='1' stop-color='%23b8862b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 2 L28 7 V16 C28 23 22 28 16 30 C10 28 4 23 4 16 V7 Z' fill='%23140d06' stroke='url(%23g)' stroke-width='2.5'/%3E%3Cpath d='M16 9 L19 15 L16 23 L13 15 Z' fill='url(%23g)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Marcellus&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Spieloberflaeche: dunkler Stein, Goldrahmen, rote Knoepfe, Klassen- und Qualitaetsfarben aus WoW.
+   Oben Ehrentafel, darunter Abenteurerliste (links) und Chatfenster-Chronik (rechts), unten Levelrennen. */
+:root {
+  --night: #0a0806;
+  --well: #050403;
+  --text: #f1ead8;
+  --muted: #a99f8a;
+  --gold: #ffd100;
+  --gold-soft: #e9c46a;
+  --guild: #40ff40;
+  --sys: #ffff00;
+  --loot: #00cc44;
+  --alliance: #3f86e0;
+  --horde: #d23b2b;
+  --title: "Cinzel", "Trajan Pro", Georgia, serif;
+  --ui: "Marcellus", "Palatino Linotype", Georgia, serif;
+  --body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --frame: linear-gradient(160deg, #f7e19a 0%, #a77a2c 20%, #f3d27a 42%, #6e4d17 68%, #e8c467 100%);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--night); }
+body {
+  margin: 0; color: var(--text); font: 400 16px/1.45 var(--body); -webkit-font-smoothing: antialiased; min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 45% at 50% -8%, rgba(255, 168, 60, .18), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 50% 115%, rgba(90, 40, 140, .16), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .62 0 0 0 0 .5 0 0 0 0 .34 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(#120e0a, #0a0806 40%);
+}
+button, input { font: inherit; color: inherit; }
+a { color: var(--gold-soft); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; font-weight: 400; text-wrap: balance; }
+
+.wrap {
+  max-width: 1360px; margin: 0 auto; display: grid; gap: 26px;
+  padding-block: 26px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Rahmen mit Goldkante und Nieten an den Ecken */
+.frame {
+  position: relative; min-width: 0;
+  background: linear-gradient(180deg, rgba(31, 25, 18, .97), rgba(13, 11, 8, .97)) padding-box, var(--frame) border-box;
+  border: 3px solid transparent; border-radius: 9px;
+  box-shadow: 0 0 0 1px #000, 0 14px 40px rgba(0, 0, 0, .65), inset 0 0 0 1px rgba(0, 0, 0, .9), inset 0 0 70px rgba(0, 0, 0, .55);
+}
+.frame::before {
+  content: ""; position: absolute; inset: -9px; pointer-events: none;
+  --gem: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff2b0'/%3E%3Cstop offset='.5' stop-color='%23c0912f'/%3E%3Cstop offset='1' stop-color='%235e400f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M10 1 L19 10 L10 19 L1 10 Z' fill='url(%23g)' stroke='%23241703' stroke-width='1'/%3E%3Ccircle cx='10' cy='10' r='3.2' fill='%23540f0a' stroke='%23ffe39a' stroke-width='1'/%3E%3C/svg%3E");
+  background: var(--gem) left top / 20px no-repeat, var(--gem) right top / 20px no-repeat, var(--gem) left bottom / 20px no-repeat, var(--gem) right bottom / 20px no-repeat;
+}
+.plate { display: flex; align-items: center; gap: 12px; padding: 14px 18px 12px; border-bottom: 1px solid rgba(233, 196, 106, .22); flex-wrap: wrap; }
+.plate h2 { font: 400 22px/1.1 var(--ui); color: var(--gold); text-shadow: 0 2px 0 #000; letter-spacing: .03em; margin-right: auto; }
+.plate .note { color: var(--muted); font-size: 14px; }
+
+/* Kopf */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.logo { display: flex; align-items: center; gap: 14px; }
+.logo svg { width: 58px; height: 64px; flex: none; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .7)); }
+h1 {
+  font: 800 clamp(34px, 6vw, 58px)/1 var(--title); letter-spacing: .02em;
+  background: linear-gradient(#fff6c4, #ffd100 46%, #b8860b 54%, #f5cf55);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 #000) drop-shadow(0 0 18px rgba(255, 170, 40, .28));
+}
+.tag { margin: 6px 0 0; font: 400 15px/1.3 var(--ui); color: var(--gold-soft); letter-spacing: .06em; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Knoepfe wie im Spiel */
+.btn {
+  font: 400 16px/1 var(--ui); color: var(--gold); letter-spacing: .02em; white-space: nowrap;
+  padding: 12px 20px; border-radius: 6px; cursor: pointer; border: 1px solid #1a0402;
+  background: linear-gradient(#c8301f, #7d0e07 55%, #570804);
+  box-shadow: inset 0 0 0 1px #e0b34f, inset 0 2px 0 rgba(255, 255, 255, .28), inset 0 -8px 12px rgba(0, 0, 0, .35), 0 3px 8px rgba(0, 0, 0, .6);
+  text-shadow: 0 1px 0 #000, 0 0 6px rgba(0, 0, 0, .7);
+}
+.btn:hover { filter: brightness(1.18); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { filter: grayscale(.8) brightness(.7); cursor: progress; }
+.btn.stone { background: linear-gradient(#3a3024, #1b1611 60%, #120e0a); }
+.btn.small { padding: 8px 14px; font-size: 14px; }
+.linkbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 0; font-size: 14px; }
+.linkbtn:hover { color: var(--text); }
+
+/* Ehrentafel als Erfolgs-Einblendungen */
+.hall { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.toast {
+  display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 12px; align-items: center; padding: 12px 14px 12px 12px; min-height: 84px;
+  border-radius: 10px; border: 2px solid transparent;
+  background: radial-gradient(ellipse at 20% 0%, rgba(255, 210, 120, .14), transparent 60%) padding-box, linear-gradient(#211a12, #0e0b08) padding-box, var(--frame) border-box;
+  box-shadow: 0 0 0 1px #000, 0 8px 24px rgba(0, 0, 0, .55);
+}
+.toast svg { width: 54px; height: 60px; }
+.toast .k { font: 400 12px/1.2 var(--ui); color: var(--gold-soft); letter-spacing: .12em; text-transform: uppercase; }
+.toast .v { font: 400 19px/1.2 var(--ui); margin-top: 4px; overflow-wrap: anywhere; }
+.toast .s { color: var(--muted); font-size: 14px; }
+
+/* Hauptbereich */
+.main { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+.side { position: sticky; top: 14px; }
+
+/* Abenteurerliste */
+.roster { list-style: none; margin: 0; padding: 8px 10px 12px; display: grid; gap: 2px; }
+.row {
+  display: grid; grid-template-columns: 34px 60px minmax(0, 1fr) minmax(150px, 210px) 112px; gap: 14px; align-items: center;
+  padding: 10px 12px; border-radius: 6px; cursor: pointer; border: 1px solid transparent;
+}
+.row:nth-child(odd) { background: rgba(255, 235, 190, .025); }
+.row:hover, .row:focus-visible { background: linear-gradient(90deg, rgba(255, 209, 0, .1), rgba(255, 209, 0, .02)); border-color: rgba(233, 196, 106, .35); outline: none; }
+.rank { font: 400 22px/1 var(--ui); color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+.rank.r1 { color: #ffd100; text-shadow: 0 0 10px rgba(255, 209, 0, .45); }
+.rank.r2 { color: #d9dde3; }
+.rank.r3 { color: #d8955a; }
+.who { min-width: 0; }
+.nm { font: 400 20px/1.15 var(--ui); color: var(--cls); text-shadow: 0 1px 0 #000; overflow-wrap: anywhere; }
+.nm small { font-size: 15px; opacity: .8; }
+.meta { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 14px; color: var(--muted); margin-top: 3px; align-items: center; }
+.meta .guildtag { color: var(--guild); }
+.meta img { width: 18px; height: 18px; border-radius: 3px; vertical-align: -4px; box-shadow: 0 0 0 1px #000; }
+.fac { display: inline-flex; align-items: center; gap: 5px; }
+.fac i { width: 9px; height: 9px; border-radius: 2px; transform: rotate(45deg); }
+.fac.ALLIANCE i { background: var(--alliance); } .fac.HORDE i { background: var(--horde); }
+.prog { display: grid; gap: 5px; font: 400 13px/1 var(--ui); color: var(--muted); }
+.prog b { color: var(--gold); font-weight: 400; font-size: 15px; }
+.seen { text-align: right; font-size: 13px; color: var(--muted); line-height: 1.3; }
+.seen b { display: block; color: var(--text); font: 400 17px/1.1 var(--ui); white-space: nowrap; }
+
+/* Einheitenrahmen-Portraet mit Stufenkreis */
+.portrait { position: relative; width: 56px; height: 56px; }
+.portrait > img, .portrait > .ph { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; background: #000; }
+.portrait > .ph { display: grid; place-items: center; background: radial-gradient(circle at 50% 35%, #2b2219, #080604); }
+.portrait > .ph img { width: 30px; height: 30px; border-radius: 50%; opacity: .9; }
+.portrait::after {
+  content: ""; position: absolute; inset: -4px; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from 210deg, #fff0b0, #9a6f24, #f3d27a, #5d4114, #e8c467, #fff0b0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px));
+}
+.portrait .lv {
+  position: absolute; left: -7px; bottom: -5px; z-index: 1; min-width: 25px; height: 25px; padding: 0 4px; border-radius: 13px;
+  background: radial-gradient(#3a2a12, #120c05); border: 2px solid #d9b45a; color: var(--gold);
+  font: 400 13px/21px var(--ui); text-align: center; text-shadow: 0 1px 0 #000;
+}
+
+/* EP-Leiste mit 20 Abschnitten wie im Spiel */
+.xpbar { position: relative; height: 13px; border-radius: 3px; background: #130b1d; border: 1px solid #000; box-shadow: inset 0 0 0 1px rgba(180, 140, 70, .35); overflow: hidden; }
+.xpbar i { display: block; height: 100%; background: linear-gradient(#c38af5, #7a2cc4 55%, #4f128f); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35); }
+.xpbar::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(5% - 1px), rgba(0, 0, 0, .7) calc(5% - 1px) 5%); }
+
+.waiting { margin: 4px 12px 14px; padding: 12px 14px; border-radius: 6px; background: rgba(0, 0, 0, .35); border: 1px dashed rgba(233, 196, 106, .3); color: var(--muted); font-size: 15px; }
+.waiting b { color: var(--text); font-weight: 500; }
+.chip { display: inline-flex; align-items: center; gap: 6px; margin: 6px 8px 0 0; padding: 3px 4px 3px 10px; border-radius: 999px; background: rgba(255, 255, 255, .05); color: var(--text); }
+.chip button { border: 0; background: rgba(0, 0, 0, .4); color: var(--muted); border-radius: 50%; width: 22px; height: 22px; cursor: pointer; line-height: 1; }
+.empty { padding: 34px 22px 38px; text-align: center; display: grid; gap: 14px; justify-items: center; }
+.empty h3 { font: 400 24px/1.2 var(--ui); color: var(--gold); }
+.empty p { margin: 0; color: var(--muted); max-width: 46ch; }
+
+/* Chronik im Stil des Chatfensters */
+.chattabs { display: flex; gap: 4px; padding: 10px 12px 0; }
+.chattabs button {
+  border: 1px solid rgba(233, 196, 106, .25); border-bottom: 0; border-radius: 6px 6px 0 0; padding: 6px 12px; cursor: pointer;
+  background: rgba(0, 0, 0, .35); color: var(--muted); font: 400 14px/1 var(--ui);
+}
+.chattabs button[aria-pressed="true"] { background: rgba(0, 0, 0, .65); color: var(--gold); }
+.chat { margin: 0 12px 12px; padding: 10px 12px; background: rgba(0, 0, 0, .62); border: 1px solid rgba(233, 196, 106, .18); border-radius: 0 6px 6px 6px; max-height: 610px; overflow-y: auto; font: 400 15px/1.45 var(--body); text-shadow: 0 1px 1px #000; }
+.chat p { margin: 0 0 5px; overflow-wrap: anywhere; }
+.chat time { color: #8d8d8d; }
+.chat .sys { color: var(--sys); }
+.chat .loot { color: var(--loot); }
+.chat .gld { color: var(--guild); }
+.chat .off { color: #9a9a9a; }
+.chat .pl { color: var(--cls); cursor: pointer; }
+.chat .pl:hover { text-decoration: underline; }
+.chat .lnk { color: var(--q); }
+.chat .ach { color: #ffff7a; }
+.chat .hint { color: var(--muted); }
+
+/* Levelrennen */
+#race { padding: 10px 14px 12px; }
+#race svg { display: block; width: 100%; height: auto; overflow: visible; }
+#race text { font-family: var(--ui); }
+.racenote { color: var(--muted); margin: 6px 4px 10px; }
+
+footer { color: var(--muted); font-size: 14px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; border-top: 1px solid rgba(233, 196, 106, .18); padding-top: 14px; }
+footer p { margin: 0; max-width: 72ch; }
+
+/* Dialoge */
+dialog { border: 0; padding: 0; background: transparent; color: var(--text); max-width: calc(100vw - 24px); }
+dialog::backdrop { background: rgba(3, 2, 1, .78); backdrop-filter: blur(2px); }
+.dlg { width: min(560px, calc(100vw - 24px)); padding: 0 0 20px; }
+.dlg .body { padding: 16px 20px 0; display: grid; gap: 14px; }
+.dlg p { margin: 0; color: var(--muted); }
+.dlg label { display: grid; gap: 6px; font: 400 15px var(--ui); color: var(--gold-soft); }
+.field {
+  width: 100%; padding: 12px 14px; border-radius: 6px; font-size: 18px; color: var(--text);
+  background: #070605; border: 1px solid #5a4520; box-shadow: inset 0 2px 6px rgba(0, 0, 0, .8);
+}
+.field::placeholder { color: #6f6656; }
+.field:focus { border-color: var(--gold-soft); outline: none; box-shadow: inset 0 2px 6px rgba(0, 0, 0, .8), 0 0 0 2px rgba(255, 209, 0, .25); }
+.seg { display: inline-flex; border: 1px solid #5a4520; border-radius: 6px; overflow: hidden; width: max-content; }
+.seg button { background: #0d0b08; border: 0; padding: 8px 14px; cursor: pointer; color: var(--muted); font: 400 14px var(--ui); }
+.seg button[aria-pressed="true"] { background: linear-gradient(#5c430f, #2f2207); color: var(--gold); }
+.msg { padding: 10px 12px; border-radius: 6px; font-size: 15px; }
+.msg.ok { background: rgba(30, 255, 0, .08); color: #9dff8a; border: 1px solid rgba(30, 255, 0, .25); }
+.msg.err { background: rgba(255, 60, 40, .1); color: #ff9c8a; border: 1px solid rgba(255, 60, 40, .3); }
+.row2 { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.x {
+  position: absolute; top: 10px; right: 10px; z-index: 2; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; border: 1px solid #1a0402;
+  background: linear-gradient(#c8301f, #6d0c06); box-shadow: inset 0 0 0 1px #e0b34f; color: #ffe9b0; font: 700 18px/1 var(--body);
+}
+.tabs2 { display: flex; gap: 6px; }
+.tabs2 button { flex: 1; padding: 10px; border-radius: 6px 6px 0 0; border: 1px solid #5a4520; border-bottom: 0; background: #0d0b08; color: var(--muted); cursor: pointer; font: 400 15px var(--ui); }
+.tabs2 button[aria-pressed="true"] { background: linear-gradient(#3b2d14, #1a140a); color: var(--gold); }
+.linkbox { display: flex; gap: 8px; }
+.linkbox .field { font-size: 15px; }
+
+/* Charakterbogen */
+.sheet { width: min(980px, calc(100vw - 24px)); }
+.sheet .head { padding: 18px 56px 14px 22px; border-bottom: 1px solid rgba(233, 196, 106, .22); display: flex; gap: 16px; align-items: center; }
+.sheet .head .portrait { width: 64px; height: 64px; flex: none; }
+.sheet .head h2 { font: 400 30px/1.1 var(--ui); color: var(--cls); text-shadow: 0 2px 0 #000; }
+.sheet .head p { margin: 4px 0 0; color: var(--text); font-size: 16px; }
+.sheet .head .guildtag { color: var(--guild); }
+.paper { display: grid; grid-template-columns: 56px minmax(0, 1fr) 56px; gap: 14px; padding: 18px 22px 8px; }
+.slots { display: grid; gap: 7px; align-content: start; }
+.model {
+  position: relative; min-height: 440px; border-radius: 8px; overflow: hidden; display: grid; place-items: end center;
+  background: radial-gradient(ellipse 60% 55% at 50% 58%, color-mix(in srgb, var(--cls) 22%, transparent), transparent 70%), radial-gradient(ellipse at 50% 100%, #2a2016, #070605 70%);
+  border: 1px solid rgba(233, 196, 106, .2); box-shadow: inset 0 0 50px rgba(0, 0, 0, .8);
+}
+.model img { width: 100%; max-height: 520px; height: 100%; object-fit: contain; object-position: center bottom; }
+.model .none { align-self: center; color: var(--muted); text-align: center; padding: 20px; }
+.model .ilvl { position: absolute; top: 10px; left: 12px; font: 400 14px var(--ui); color: var(--muted); text-shadow: 0 1px 0 #000; }
+.model .ilvl b { display: block; font-size: 24px; color: #c9a3ff; }
+.weapons { grid-column: 1 / -1; display: flex; justify-content: center; gap: 7px; }
+.slot {
+  width: 56px; height: 56px; border-radius: 7px; position: relative; cursor: default;
+  border: 2px solid var(--q, #3a3126); background: #0b0906 center / cover no-repeat;
+  box-shadow: inset 0 0 0 1px #000, 0 0 10px color-mix(in srgb, var(--q, #000) 40%, transparent);
+}
+.slot.empty { border-color: #2b241b; background: radial-gradient(#1a1510, #0b0906); box-shadow: inset 0 0 0 1px #000; opacity: .65; }
+.slot.empty::after { content: attr(data-s); position: absolute; inset: 0; display: grid; place-items: center; font: 400 9px/1.1 var(--ui); color: #6f6656; text-align: center; padding: 3px; }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 10px 22px 6px; }
+.box { background: rgba(0, 0, 0, .35); border: 1px solid rgba(233, 196, 106, .16); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.box h3 { font: 400 17px/1.2 var(--ui); color: var(--gold); margin-bottom: 8px; }
+.stat { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; padding: 2px 0; }
+.stat span:first-child { color: var(--gold-soft); }
+.stat span:last-child { font-variant-numeric: tabular-nums; }
+.skill { margin-bottom: 8px; }
+.skill .bar { position: relative; height: 20px; border-radius: 4px; background: #0a0f1c; border: 1px solid #000; box-shadow: inset 0 0 0 1px rgba(180, 140, 70, .4); overflow: hidden; }
+.skill .bar i { display: block; height: 100%; background: linear-gradient(#4f86e8, #1d4aa8 60%, #133274); }
+.skill .bar span { position: absolute; inset: 0; display: flex; justify-content: space-between; padding: 0 8px; align-items: center; font: 400 13px/1 var(--ui); text-shadow: 0 1px 1px #000; }
+.achl { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 15px; }
+.achl li { display: flex; justify-content: space-between; gap: 8px; }
+.achl li span:first-child { color: #ffff7a; }
+.achl time { color: var(--muted); font-size: 13px; white-space: nowrap; }
+.muted { color: var(--muted); }
+.sheetfoot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 22px 0; color: var(--muted); font-size: 14px; }
+
+/* Tooltip wie im Spiel */
+#tip {
+  position: fixed; z-index: 50; pointer-events: none; max-width: 330px; padding: 9px 11px 10px;
+  background: rgba(6, 8, 22, .95); border: 1px solid #a3a3a3; border-radius: 5px;
+  box-shadow: 0 0 0 1px #000, inset 0 0 0 1px rgba(0, 0, 0, .9), 0 8px 24px rgba(0, 0, 0, .6);
+  font: 400 14px/1.35 var(--ui); color: #fff;
+}
+#tip .tn { font-size: 16px; margin-bottom: 2px; }
+#tip .tr { display: flex; justify-content: space-between; gap: 18px; }
+#tip .gold { color: var(--gold); } #tip .green { color: #1eff00; } #tip .grey { color: #808080; }
+.coin { display: inline-flex; align-items: center; gap: 3px; margin-left: 5px; }
+.coin::after { content: ""; width: 9px; height: 9px; border-radius: 50%; }
+.coin.g::after { background: radial-gradient(circle at 35% 35%, #fff3a0, #d4a017); }
+.coin.s::after { background: radial-gradient(circle at 35% 35%, #ffffff, #9aa3ad); }
+.coin.k::after { background: radial-gradient(circle at 35% 35%, #ffc59a, #b0602a); }
+
+@media (max-width: 1080px) {
+  .hall { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .main { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; }
+}
+@media (max-width: 720px) {
+  .row { grid-template-columns: 26px 56px minmax(0, 1fr); gap: 10px 12px; }
+  .row .prog { grid-column: 2 / -1; }
+  .row .seen { grid-column: 2 / -1; text-align: left; display: flex; gap: 8px; align-items: baseline; }
+  .row .seen b { display: inline; font-size: 15px; }
+  .paper { grid-template-columns: 48px minmax(0, 1fr) 48px; gap: 8px; padding: 14px 12px 6px; }
+  .slot { width: 48px; height: 48px; }
+  .model { min-height: 330px; }
+  .cols { grid-template-columns: minmax(0, 1fr); padding: 10px 12px 6px; }
+  .sheet .head { padding: 16px 50px 12px 14px; }
+  .sheet .head h2 { font-size: 24px; }
+  .sheetfoot { padding: 12px 12px 0; }
+}
+@media (max-width: 460px) {
+  .hall { grid-template-columns: minmax(0, 1fr); }
+  .actions { width: 100%; }
+  .actions .btn { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">
+      <svg viewBox="0 0 58 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2b0"/><stop offset=".5" stop-color="#d9a63a"/><stop offset="1" stop-color="#7a5414"/></linearGradient><radialGradient id="lr" cx=".5" cy=".4" r=".6"><stop offset="0" stop-color="#5a1410"/><stop offset="1" stop-color="#1a0503"/></radialGradient></defs><path d="M29 2 L54 11 V30 C54 45 43 56 29 62 C15 56 4 45 4 30 V11 Z" fill="url(#lr)" stroke="url(#lg)" stroke-width="3.5"/><circle cx="29" cy="31" r="15" fill="none" stroke="url(#lg)" stroke-width="2"/><circle cx="29" cy="31" r="8" fill="none" stroke="url(#lg)" stroke-width="1.4" opacity=".7"/><path d="M29 31 L41 22" stroke="#ffe39a" stroke-width="2.4" stroke-linecap="round"/><circle cx="36" cy="37" r="2.6" fill="#1eff00"/><circle cx="22" cy="25" r="2.2" fill="#3fc7eb"/></svg>
+      <div><h1>FreundesRadar</h1><p class="tag">Die Abenteurer-Chronik eurer Gruppe in WoW Forever</p></div>
+    </div>
+    <div class="actions">
+      <button class="btn stone" id="inviteBtn" type="button">Freunde einladen</button>
+      <button class="btn" id="addBtn" type="button">Charakter hinzufügen</button>
+    </div>
+  </header>
+
+  <section class="hall" id="hall" aria-label="Ehrentafel"></section>
+
+  <div class="main">
+    <section class="frame" aria-labelledby="rosterTitle">
+      <div class="plate"><h2 id="rosterTitle">Abenteurer</h2><span class="note" id="rosterNote"></span></div>
+      <ol class="roster" id="roster"></ol>
+      <div id="waiting"></div>
+    </section>
+    <section class="frame side" aria-labelledby="feedTitle">
+      <div class="plate"><h2 id="feedTitle">Chronik</h2></div>
+      <div class="chattabs" role="group" aria-label="Chronik filtern">
+        <button type="button" data-t="all" aria-pressed="true">Allgemein</button>
+        <button type="button" data-t="loot" aria-pressed="false">Beute</button>
+        <button type="button" data-t="seen" aria-pressed="false">Anmeldungen</button>
+      </div>
+      <div class="chat" id="feed" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <section class="frame" aria-labelledby="raceTitle">
+    <div class="plate"><h2 id="raceTitle">Levelrennen</h2><span class="note">Wer ist zuerst auf Stufe 60?</span></div>
+    <div id="race"></div>
+  </section>
+
+  <footer>
+    <p>Die Daten kommen direkt von Blizzard und werden alle 5 Minuten abgeglichen. Blizzard aktualisiert ein Profil, sobald sich der Charakter im Spiel ausloggt. Charaktere erscheinen ab Stufe 10.</p>
+    <p id="fresh"></p>
+  </footer>
+</div>
+
+<dialog id="addDlg" aria-labelledby="addTitle">
+  <form class="frame dlg" id="addForm" novalidate>
+    <button class="x" type="button" data-close aria-label="Schließen">×</button>
+    <div class="plate"><h2 id="addTitle">Charakter hinzufügen</h2></div>
+    <div class="body">
+      <div class="tabs2" role="group">
+        <button type="button" data-mode="char" aria-pressed="true">Ein Charakter</button>
+        <button type="button" data-mode="guild" aria-pressed="false">Ganze Gilde</button>
+      </div>
+      <label for="addName"><span id="addLabel">Vor- und Nachname im Spiel</span>
+        <input class="field" id="addName" autocomplete="off" spellcheck="false" placeholder="z. B. Daxan Windfury" required>
+      </label>
+      <div class="row2"><span class="muted">Region</span>
+        <div class="seg" role="group" aria-label="Region"><button type="button" data-r="eu" aria-pressed="true">Europa</button><button type="button" data-r="us" aria-pressed="false">Amerika</button></div>
+      </div>
+      <label for="addCode" id="codeWrap" hidden>Gruppencode
+        <input class="field" id="addCode" autocomplete="off" spellcheck="false" placeholder="steht im Einladungslink">
+      </label>
+      <div id="addMsg" class="msg" hidden></div>
+      <div class="row2"><button class="btn" id="addGo" type="submit">Hinzufügen</button><span class="muted" id="addHint">Blizzard zeigt Charaktere ab Stufe 10. Kleinere erscheinen automatisch, sobald sie Stufe 10 erreichen.</span></div>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="inviteDlg" aria-labelledby="inviteTitle">
+  <div class="frame dlg">
+    <button class="x" type="button" data-close aria-label="Schließen">×</button>
+    <div class="plate"><h2 id="inviteTitle">Freunde einladen</h2></div>
+    <div class="body">
+      <p>Schick diesen Link in eure WhatsApp- oder Discord-Gruppe. Wer ihn öffnet, trägt einfach seinen Charakternamen ein. Nichts herunterladen, nichts installieren.</p>
+      <div id="inviteLinkWrap" class="linkbox"><input class="field" id="inviteLink" readonly><button class="btn small" id="copyBtn" type="button">Kopieren</button></div>
+      <label for="inviteCode" id="inviteCodeWrap" hidden>Gruppencode eingeben, um den Einladungslink zu bauen
+        <input class="field" id="inviteCode" autocomplete="off" spellcheck="false">
+      </label>
+      <p>Ohne den Link kann man die Seite nur ansehen, aber niemanden eintragen.</p>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="sheetDlg" aria-labelledby="sheetName">
+  <div class="frame sheet" id="sheet"></div>
+</dialog>
+
+<div id="tip" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SB_URL = 'https://gcqpircnjukctsijffjn.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjcXBpcmNuanVrY3RzaWpmZmpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM4ODk1NDEsImV4cCI6MjEwOTQ2NTU0MX0.sDary13MkH3Xid5WsVG_EIXxrCByDlQyUShX3CSeW4I';
+const SITE = 'https://maltekruse23-oss.github.io/freundesradar/';
+
+const CLASSES = {
+  1: ['Krieger', '#C69B6D', 'warrior'], 2: ['Paladin', '#F48CBA', 'paladin'], 3: ['Jäger', '#AAD372', 'hunter'], 4: ['Schurke', '#FFF468', 'rogue'],
+  5: ['Priester', '#FFFFFF', 'priest'], 6: ['Todesritter', '#C41E3A', 'deathknight'], 7: ['Schamane', '#0070DD', 'shaman'], 8: ['Magier', '#3FC7EB', 'mage'],
+  9: ['Hexenmeister', '#8788EE', 'warlock'], 10: ['Mönch', '#00FF98', 'monk'], 11: ['Druide', '#FF7C0A', 'druid'], 12: ['Dämonenjäger', '#A330C9', 'demonhunter'], 13: ['Rufer', '#33937F', 'evoker'],
+};
+const RACES = { 1: 'Mensch', 2: 'Orc', 3: 'Zwerg', 4: 'Nachtelf', 5: 'Untoter', 6: 'Tauren', 7: 'Gnom', 8: 'Troll' };
+const QUAL = { POOR: '#9d9d9d', COMMON: '#ffffff', UNCOMMON: '#1eff00', RARE: '#3d8cff', EPIC: '#b04dff', LEGENDARY: '#ff8000', ARTIFACT: '#e6cc80', HEIRLOOM: '#00ccff' };
+const LEFT = ['HEAD', 'NECK', 'SHOULDER', 'BACK', 'CHEST', 'SHIRT', 'TABARD', 'WRIST'];
+const RIGHT = ['HANDS', 'WAIST', 'LEGS', 'FEET', 'FINGER_1', 'FINGER_2', 'TRINKET_1', 'TRINKET_2'];
+const BOTTOM = ['MAIN_HAND', 'OFF_HAND', 'RANGED'];
+const SLOT_DE = { HEAD: 'Kopf', NECK: 'Hals', SHOULDER: 'Schultern', BACK: 'Rücken', CHEST: 'Brust', SHIRT: 'Hemd', TABARD: 'Wappenrock', WRIST: 'Handgelenke',
+  HANDS: 'Hände', WAIST: 'Taille', LEGS: 'Beine', FEET: 'Füße', FINGER_1: 'Finger', FINGER_2: 'Finger', TRINKET_1: 'Schmuck', TRINKET_2: 'Schmuck',
+  MAIN_HAND: 'Waffenhand', OFF_HAND: 'Schildhand', RANGED: 'Distanz' };
+const CODE_RE = /^[a-z]+-[0-9a-f]{8}$/;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+// nur Bilder von Blizzard-Servern, ohne Zeichen, die aus src="" oder url('') ausbrechen koennten
+const img = u => (typeof u === 'string' && /^https:\/\/([a-z0-9-]+\.)*(worldofwarcraft\.com|blizzard\.com|battle\.net)\/[^'"()\s<>]*$/.test(u) ? u : null);
+const sb = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false } });
+const S = { members: new Map(), feed: [], levels: [], guilds: new Map(), tab: 'all', open: null, region: 'eu', mode: 'char', code: null };
+
+// ---------- Gruppencode aus dem Einladungslink ----------
+function store(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
+function load_(k) { try { return localStorage.getItem(k); } catch { return null; } }
+(() => {
+  const h = decodeURIComponent(location.hash.slice(1)).trim().toLowerCase();
+  if (CODE_RE.test(h)) { store('fr_code', h); history.replaceState(null, '', location.pathname + location.search); }
+  S.code = CODE_RE.test(h) ? h : load_('fr_code');
+})();
+const inviteLink = () => S.code ? `${SITE}#${S.code}` : '';
+
+// ---------- Formatierung ----------
+const hm = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' });
+const dm = new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'numeric' });
+const wdh = new Intl.DateTimeFormat('de-DE', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+function ago(ts) {
+  if (!ts) return '';
+  const s = (Date.now() - Date.parse(ts)) / 1000;
+  if (s < 90) return 'gerade eben';
+  if (s < 3600) return `vor ${Math.round(s / 60)} Min`;
+  if (s < 86400) return `vor ${Math.floor(s / 3600)} Std`;
+  const d = Math.floor(s / 86400);
+  return d === 1 ? 'gestern' : `vor ${d} Tagen`;
+}
+function stamp(ts) {
+  const t = new Date(ts);
+  return t.toDateString() === new Date().toDateString() ? hm.format(t) : dm.format(t) + ' ' + hm.format(t);
+}
+const fullName = m => [m.name, m.surname].filter(Boolean).join(' ');
+const cls = m => CLASSES[m.class_id] || ['', '#c8bfa8', ''];
+function className(m) { return m.class_name || cls(m)[0]; }
+function raceName(m) {
+  if (m.race_name) return m.race_name;
+  if (RACES[m.race_id]) return RACES[m.race_id];
+  for (const o of S.members.values()) if (o.race_id === m.race_id && o.race_name) return o.race_name;
+  return '';
+}
+const classIcon = m => cls(m)[2] ? `https://render.worldofwarcraft.com/eu/icons/56/classicon_${cls(m)[2]}.jpg` : null;
+// dunkle Klassenfarben (Schamane, Todesritter) auf dunklem Grund lesbar machen
+function ink(hex) {
+  const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  if ((0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.42) return hex;
+  const mix = v => Math.round(v + (255 - v) * 0.4);
+  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+}
+const color = m => ink(cls(m)[1]);
+function coins(arr) {
+  const [g, s, k] = (arr || []).map(x => +x || 0);
+  return (g ? `<span class="coin g">${g}</span>` : '') + (g || s ? `<span class="coin s">${s}</span>` : '') + `<span class="coin k">${k}</span>`;
+}
+
+// ---------- Tooltip ----------
+const tips = new Map(); let tipSeq = 0;
+function tipAttr(html) { const id = ++tipSeq; tips.set(String(id), html); return `data-tip="${id}"`; }
+function itemTip(it) {
+  let h = `<div class="tn" style="color:${QUAL[it.quality] || '#fff'}">${esc(it.name)}</div>`;
+  for (const l of it.lines || []) {
+    if (l.money) { h += `<div>${esc(l.t)}${coins(l.money)}</div>`; continue; }
+    const c = ['gold', 'green', 'grey'].includes(l.c) ? l.c : '';
+    h += l.r ? `<div class="tr ${c}"><span>${esc(l.t)}</span><span>${esc(l.r)}</span></div>` : `<div class="${c}">${esc(l.t)}</div>`;
+  }
+  return h;
+}
+const tip = $('#tip');
+function placeTip(x, y) {
+  const r = tip.getBoundingClientRect();
+  let left = x + 18, top = y + 18;
+  if (left + r.width > innerWidth - 8) left = Math.max(8, x - r.width - 14);
+  if (top + r.height > innerHeight - 8) top = Math.max(8, innerHeight - r.height - 8);
+  tip.style.left = left + 'px'; tip.style.top = top + 'px';
+}
+document.addEventListener('pointerover', e => {
+  const el = e.target.closest('[data-tip]');
+  if (!el) { tip.hidden = true; return; }
+  tip.innerHTML = tips.get(el.dataset.tip) || ''; tip.hidden = false; placeTip(e.clientX, e.clientY);
+});
+document.addEventListener('pointermove', e => { if (!tip.hidden) placeTip(e.clientX, e.clientY); });
+document.addEventListener('scroll', () => { tip.hidden = true; }, true);
+
+// ---------- Daten ----------
+async function load() {
+  const [m, f, l, g] = await Promise.all([
+    sb.from('fr_members').select('*'),
+    sb.from('fr_feed').select('*').order('at', { ascending: false }).limit(200),
+    sb.from('fr_levels').select('*').limit(10000),
+    sb.from('fr_guilds').select('*'),
+  ]);
+  const err = [m, f, l, g].find(r => r.error);
+  if (err) throw err.error;
+  S.members = new Map(m.data.map(x => [x.id, x]));
+  S.feed = f.data; S.levels = l.data;
+  S.guilds = new Map(g.data.map(x => [x.id, x]));
+  render();
+}
+function subscribe() {
+  let first = true;
+  sb.channel('radar2')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'fr_members' }, ({ eventType, new: m, old }) => {
+      if (eventType === 'DELETE') S.members.delete(old.id); else S.members.set(m.id, m);
+      if (m && m.level) S.levels.push({ member_id: m.id, level: m.level, at: m.last_login || m.checked_at || new Date().toISOString() });
+      render();
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fr_feed' }, ({ new: e }) => { S.feed.unshift(e); render(); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'fr_guilds' }, ({ new: g }) => { if (g && g.id) S.guilds.set(g.id, g); render(); })
+    .subscribe(st => { if (st === 'SUBSCRIBED') { if (!first) load().catch(() => {}); first = false; } });
+}
+async function call(body) {
+  try {
+    const r = await fetch(`${SB_URL}/functions/v1/radar`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SB_KEY}`, apikey: SB_KEY }, body: JSON.stringify(body),
+    });
+    return await r.json();
+  } catch { return { ok: false, error: 'Keine Verbindung. Bist du online?' }; }
+}
+
+// ---------- Darstellung ----------
+let queued = false;
+function render() {
+  if (queued) return; queued = true;
+  requestAnimationFrame(() => { queued = false; tips.clear(); renderHall(); renderRoster(); renderFeed(); renderRace(); if (S.open) renderSheet(); renderFresh(); });
+}
+const ranked = () => [...S.members.values()].filter(m => m.state !== 'pending' && m.level)
+  .sort((a, b) => b.level - a.level || (b.ilvl || 0) - (a.ilvl || 0) || (Date.parse(b.last_login || 0) - Date.parse(a.last_login || 0)));
+
+function shield(n, hue) {
+  return `<svg viewBox="0 0 54 60" aria-hidden="true"><defs><linearGradient id="sg${hue}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2b0"/><stop offset=".55" stop-color="#c79a3a"/><stop offset="1" stop-color="#6e4d17"/></linearGradient></defs>
+    <path d="M27 2 L50 10 V28 C50 42 40 52 27 58 C14 52 4 42 4 28 V10 Z" fill="hsl(${hue} 55% 16%)" stroke="url(#sg${hue})" stroke-width="3"/>
+    <text x="27" y="36" text-anchor="middle" font-family="Marcellus, Georgia, serif" font-size="${String(n).length > 3 ? 14 : 18}" fill="#ffd100" stroke="#000" stroke-width=".6">${esc(n)}</text></svg>`;
+}
+function renderHall() {
+  const list = ranked(), ok = list.filter(m => m.state === 'ok');
+  const best = (arr, f) => arr.reduce((a, m) => (f(m) != null && (!a || f(m) > f(a)) ? m : a), null);
+  const topLvl = list[0], topGear = best(ok, m => m.ilvl), topAch = best(ok, m => m.achievement_points || null);
+  let topProf = null, prof = null;
+  for (const m of ok) for (const p of m.professions?.primary || []) if (p.skill != null && (!prof || p.skill > prof.skill)) { prof = p; topProf = m; }
+  const tile = (k, m, val, sub, hue) => `<div class="toast">${shield(m ? val : '–', hue)}<div><div class="k">${k}</div>${m
+    ? `<div class="v" style="color:${color(m)}">${esc(fullName(m))}</div><div class="s">${sub}</div>`
+    : '<div class="v muted">Noch offen</div><div class="s">wartet auf den Ersten</div>'}</div></div>`;
+  $('#hall').innerHTML =
+    tile('Höchste Stufe', topLvl, topLvl?.level, topLvl ? `Stufe ${topLvl.level} ${esc(className(topLvl))}` : '', 40) +
+    tile('Beste Ausrüstung', topGear, topGear?.ilvl, topGear ? `Gegenstandsstufe ${topGear.ilvl}` : '', 275) +
+    tile('Meiste Erfolge', topAch, topAch?.achievement_points, topAch ? `${topAch.achievement_points} Erfolgspunkte` : '', 200) +
+    tile('Meister des Handwerks', topProf, prof?.skill, prof ? `${esc(prof.name)} ${prof.skill}${prof.max ? ' / ' + prof.max : ''}` : '', 120);
+}
+
+function portrait(m, size) {
+  const av = img(m.avatar_url), ic = img(classIcon(m));
+  const inner = av ? `<img src="${av}" alt="" loading="lazy">` : `<div class="ph">${ic ? `<img src="${ic}" alt="" loading="lazy">` : ''}</div>`;
+  return `<div class="portrait"${size ? ` style="width:${size}px;height:${size}px"` : ''}>${inner}<span class="lv">${m.level ?? '?'}</span></div>`;
+}
+function metaLine(m) {
+  const ic = img(classIcon(m));
+  const parts = [];
+  parts.push(`<span>${ic ? `<img src="${ic}" alt=""> ` : ''}${esc([raceName(m), className(m)].filter(Boolean).join(' '))}</span>`);
+  if (m.guild_name) parts.push(`<span class="guildtag">&lt;${esc(m.guild_name)}&gt;</span>`);
+  if (m.faction) parts.push(`<span class="fac ${m.faction === 'HORDE' ? 'HORDE' : 'ALLIANCE'}"><i></i>${m.faction === 'HORDE' ? 'Horde' : 'Allianz'}</span>`);
+  return parts.join('');
+}
+function renderRoster() {
+  const list = ranked();
+  const waiting = [...S.members.values()].filter(m => m.state === 'pending' || !m.level);
+  $('#rosterNote').textContent = list.length ? `${list.length} ${list.length === 1 ? 'Charakter' : 'Charaktere'}` : '';
+  if (!list.length) {
+    $('#roster').innerHTML = `<li class="empty"><h3>Noch keine Abenteurer</h3><p>Trag deinen Charakter mit Vor- und Nachnamen ein und schick danach den Einladungslink an deine Freunde.</p><button class="btn" type="button" data-add>Charakter hinzufügen</button></li>`;
+  } else {
+    $('#roster').innerHTML = list.map((m, i) => {
+      const pct = Math.min(100, (m.level / 60) * 100);
+      const last = m.last_login ? `<b>${esc(ago(m.last_login))}</b>zuletzt gespielt` : m.state === 'roster' ? '<b>unter 10</b>Details ab Stufe 10' : '';
+      return `<li class="row" tabindex="0" data-id="${m.id}" style="--cls:${color(m)}">
+        <span class="rank${i < 3 ? ' r' + (i + 1) : ''}">${i + 1}</span>
+        ${portrait(m)}
+        <div class="who"><div class="nm">${esc(m.name)} <small>${esc(m.surname || '')}</small></div><div class="meta">${metaLine(m)}</div></div>
+        <div class="prog"><span><b>Stufe ${m.level}</b> von 60${m.ilvl ? ` · Gegenstandsstufe ${m.ilvl}` : ''}</span><div class="xpbar"><i style="width:${pct}%"></i></div></div>
+        <div class="seen">${last}</div></li>`;
+    }).join('');
+  }
+  $('#waiting').innerHTML = waiting.length ? `<div class="waiting"><b>Warten auf Blizzard:</b> Diese Namen sind eingetragen, aber noch nicht zu sehen. Entweder unter Stufe 10 oder anders geschrieben.<div>${waiting.map(m =>
+    `<span class="chip">${esc(fullName(m))}<button type="button" data-remove="${m.id}" aria-label="${esc(fullName(m))} entfernen" title="Entfernen">×</button></span>`).join('')}</div></div>` : '';
+}
+
+function who(m) { return m ? `<span class="pl" data-open="${m.id}" style="--cls:${color(m)}">[${esc(m.name)}]</span>` : '<span>[Jemand]</span>'; }
+function feedLine(e) {
+  const m = S.members.get(e.member_id);
+  const t = `<time datetime="${esc(e.at)}">[${stamp(e.at)}]</time> `;
+  const n = who(m);
+  switch (e.kind) {
+    case 'join': return `<p class="sys">${t}${n} ist dem FreundesRadar beigetreten.</p>`;
+    case 'level': return `<p class="sys">${t}${n} hat Stufe ${e.level} erreicht${e.level >= 60 ? ' und damit die Höchststufe!' : '.'}</p>`;
+    case 'item': {
+      const it = (m?.equipment || []).find(x => x.name === e.title);
+      const link = `<span class="lnk" style="--q:${QUAL[e.quality] || '#fff'}" ${it ? tipAttr(itemTip(it)) : ''}>[${esc(e.title)}]</span>`;
+      return `<p class="loot">${t}${n} erhält Beute: ${link}.</p>`;
+    }
+    case 'achievement': return `<p class="sys">${t}${n} hat den Erfolg <span class="ach">[${esc(e.title)}]</span> errungen!</p>`;
+    case 'guild': return `<p class="gld">${t}${n} ist der Gilde &lt;${esc(e.title)}&gt; beigetreten.</p>`;
+    case 'seen': return `<p class="off">${t}${n} hat sich abgemeldet.</p>`;
+    default: return '';
+  }
+}
+function renderFeed() {
+  const pick = { all: e => e.kind !== 'seen', loot: e => e.kind === 'item', seen: e => e.kind === 'seen' || e.kind === 'join' }[S.tab];
+  const list = S.feed.filter(pick).slice(0, 120);
+  $('#feed').innerHTML = list.length ? list.map(feedLine).join('')
+    : `<p class="hint">${S.tab === 'loot' ? 'Hier erscheinen blaue, lila und orange Gegenstände, sobald jemand sie anlegt.' : 'Hier erscheinen Stufenaufstiege, Beute und Erfolge eurer Gruppe.'}</p>`;
+}
+
+function renderRace() {
+  const box = $('#race');
+  const list = ranked();
+  if (!list.length) { box.innerHTML = '<p class="racenote">Sobald jemand eingetragen ist, beginnt hier das Rennen um Stufe 60.</p>'; return; }
+  const now = Date.now();
+  const series = list.map(m => {
+    const pts = S.levels.filter(e => e.member_id === m.id).map(e => ({ t: Date.parse(e.at), l: e.level })).filter(p => p.t && p.l).sort((a, b) => a.t - b.t || a.l - b.l);
+    if (!pts.length) pts.push({ t: Date.parse(m.added_at), l: m.level });
+    pts.push({ t: now, l: m.level });
+    return { m, pts };
+  });
+  const w = Math.max(box.clientWidth - 28, 300), h = 280, M = { l: 36, r: 150, t: 14, b: 30 };
+  const t0 = Math.min(...series.map(s => s.pts[0].t)), span = Math.max(now - t0, 6 * 3600e3), start = now - span;
+  const yMax = 60;
+  const X = t => M.l + (t - start) / span * (w - M.l - M.r);
+  const Y = l => h - M.b - l / yMax * (h - M.t - M.b);
+  let svg = '';
+  for (let l = 0; l <= 60; l += 10) svg += `<line x1="${M.l}" x2="${w - M.r}" y1="${Y(l)}" y2="${Y(l)}" stroke="rgba(233,196,106,${l === 60 ? .45 : .12})" ${l && l < 60 ? 'stroke-dasharray="2 5"' : ''}/><text x="${M.l - 8}" y="${Y(l) + 4}" text-anchor="end" fill="#a99f8a" font-size="12">${l}</text>`;
+  const days = span / 86400e3;
+  for (let i = 0; i <= 4; i++) {
+    const t = start + span * i / 4, d = new Date(t);
+    svg += `<text x="${X(t)}" y="${h - 8}" text-anchor="${i === 0 ? 'start' : i === 4 ? 'end' : 'middle'}" fill="#a99f8a" font-size="12">${(days <= 1.5 ? hm : days <= 6 ? wdh : dm).format(d).replace(',', '')}</text>`;
+  }
+  const ends = [];
+  for (const { m, pts } of series) {
+    let d = `M${X(pts[0].t).toFixed(1)} ${Y(pts[0].l).toFixed(1)}`;
+    for (const p of pts.slice(1)) d += `H${X(p.t).toFixed(1)}V${Y(p.l).toFixed(1)}`;
+    svg += `<path d="${d}" fill="none" stroke="${color(m)}" stroke-width="2.4" stroke-linejoin="round" opacity=".95"/>`;
+    ends.push({ y: Y(m.level), m });
+  }
+  ends.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) ends[i].ly = Math.max(ends[i].y, (ends[i - 1].ly ?? ends[i - 1].y) + 16);
+  for (const e of ends.slice(0, 14)) {
+    const ly = e.ly ?? e.y;
+    svg += `<circle cx="${X(now)}" cy="${e.y}" r="4" fill="${color(e.m)}" stroke="#000"/><text x="${X(now) + 10}" y="${ly + 4}" fill="${color(e.m)}" font-size="14">${esc(e.m.name)} <tspan fill="#a99f8a">${e.m.level}</tspan></text>`;
+  }
+  const hh = Math.max(h, (ends[Math.min(ends.length, 14) - 1].ly ?? 0) + 18);
+  box.innerHTML = `<svg viewBox="0 0 ${w} ${hh}" width="${w}" height="${hh}" role="img" aria-label="Stufenverlauf aller Charaktere">${svg}</svg>`;
+}
+
+function renderFresh() {
+  const last = Math.max(0, ...[...S.members.values()].map(m => Date.parse(m.checked_at) || 0));
+  $('#fresh').textContent = last ? `Zuletzt bei Blizzard nachgesehen: ${ago(new Date(last).toISOString())}` : '';
+}
+
+// ---------- Charakterbogen ----------
+function slotHtml(m, type) {
+  const it = (m.equipment || []).find(x => x.slot === type);
+  if (!it) return `<div class="slot empty" data-s="${SLOT_DE[type]}" ${tipAttr(`<div class="grey">${SLOT_DE[type]}</div><div class="grey">Leer</div>`)}></div>`;
+  const icon = img(it.icon);
+  return `<div class="slot" style="--q:${QUAL[it.quality] || '#777'};${icon ? `background-image:url('${icon}')` : ''}" ${tipAttr(itemTip(it))} role="img" aria-label="${esc(SLOT_DE[type] + ': ' + it.name)}"></div>`;
+}
+function renderSheet() {
+  const m = S.members.get(S.open);
+  if (!m) { $('#sheetDlg').close(); return; }
+  const st = m.stats || {}, pr = m.professions || {}, ac = m.achievements || {};
+  const main = img(m.main_url) || img(m.inset_url);
+  const stat = (k, v) => v == null ? '' : `<div class="stat"><span>${k}</span><span>${Number(v).toLocaleString('de-DE')}</span></div>`;
+  const skills = [...(pr.primary || []), ...(pr.secondary || [])];
+  $('#sheet').style.setProperty('--cls', color(m));
+  $('#sheet').innerHTML = `
+    <button class="x" type="button" data-close aria-label="Schließen">×</button>
+    <div class="head">${portrait(m, 64)}<div><h2 id="sheetName">${esc(fullName(m))}</h2>
+      <p>Stufe ${m.level ?? '?'} ${esc([raceName(m), className(m)].filter(Boolean).join(' '))}${m.spec_name ? ` · ${esc(m.spec_name)}` : ''}${m.guild_name ? ` · <span class="guildtag">&lt;${esc(m.guild_name)}&gt;</span>` : ''}</p></div></div>
+    ${m.state === 'ok' ? `
+    <div class="paper">
+      <div class="slots">${LEFT.map(s => slotHtml(m, s)).join('')}</div>
+      <div class="model">${main ? `<img src="${main}" alt="Bild von ${esc(fullName(m))}">` : '<p class="none">Für diesen Charakter hat Blizzard noch kein Bild.</p>'}
+        ${m.ilvl ? `<div class="ilvl">Gegenstandsstufe<b>${m.ilvl}</b></div>` : ''}</div>
+      <div class="slots">${RIGHT.map(s => slotHtml(m, s)).join('')}</div>
+      <div class="weapons">${BOTTOM.map(s => slotHtml(m, s)).join('')}</div>
+    </div>
+    <div class="cols">
+      <div class="box"><h3>Werte</h3>${stat('Leben', st.health)}${stat(st.powerType || 'Mana', st.power)}${stat('Stärke', st.str)}${stat('Beweglichkeit', st.agi)}${stat('Ausdauer', st.sta)}${stat('Intelligenz', st.int)}${stat('Willenskraft', st.spi)}${stat('Rüstung', st.armor)}${st.health == null ? '<p class="muted">Noch keine Werte.</p>' : ''}</div>
+      <div class="box"><h3>Berufe</h3>${skills.length ? skills.map(p => `<div class="skill"><div class="bar"><i style="width:${p.max ? Math.min(100, p.skill / p.max * 100) : 0}%"></i><span><span>${esc(p.name)}</span><span>${p.skill ?? '?'}${p.max ? ' / ' + p.max : ''}</span></span></div></div>`).join('') : '<p class="muted">Noch keine Berufe gelernt.</p>'}</div>
+      <div class="box"><h3>Erfolge${ac.points ? ` · ${ac.points} Punkte` : ''}</h3>${(ac.recent || []).length ? `<ul class="achl">${ac.recent.slice(0, 7).map(a => `<li><span>[${esc(a.name)}]</span><time>${dm.format(new Date(a.at))}</time></li>`).join('')}</ul>` : '<p class="muted">Noch keine Erfolge.</p>'}</div>
+    </div>` : `<div class="cols"><div class="box" style="grid-column:1/-1"><h3>Noch unter Stufe 10</h3><p class="muted">Blizzard zeigt Ausrüstung, Bild und Berufe erst ab Stufe 10. Bis dahin kennen wir nur Stufe, Volk und Klasse aus der Gildenliste.</p></div></div>`}
+    <div class="sheetfoot"><span>${m.last_login ? `Zuletzt gespielt ${esc(ago(m.last_login))}` : ''}${m.ruleset ? ` · Spielwelt-Regeln: ${esc(m.ruleset)}` : ''}</span>
+      <span id="rmWrap"><button class="linkbtn" type="button" data-remove="${m.id}">Aus dem Radar entfernen</button></span></div>`;
+}
+function openSheet(id) {
+  S.open = id; renderSheet();
+  const d = $('#sheetDlg'); if (!d.open) d.showModal();
+}
+$('#sheetDlg').addEventListener('close', () => { S.open = null; tip.hidden = true; });
+
+// ---------- Dialoge ----------
+function showMsg(el, kind, text) { el.className = 'msg ' + kind; el.textContent = text; el.hidden = !text; }
+function openAdd() {
+  $('#codeWrap').hidden = !!S.code;
+  showMsg($('#addMsg'), '', '');
+  $('#addDlg').showModal(); $('#addName').focus();
+}
+function setMode(mode) {
+  S.mode = mode;
+  document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+  $('#addLabel').textContent = mode === 'char' ? 'Vor- und Nachname im Spiel' : 'Gildenname genau wie im Spiel';
+  $('#addName').placeholder = mode === 'char' ? 'z. B. Daxan Windfury' : 'z. B. Legends of Azeroth';
+  $('#addGo').textContent = mode === 'char' ? 'Hinzufügen' : 'Ganze Gilde hinzufügen';
+  $('#addHint').textContent = mode === 'char' ? 'Blizzard zeigt Charaktere ab Stufe 10. Kleinere erscheinen automatisch, sobald sie Stufe 10 erreichen.' : 'Alle Mitglieder erscheinen auf einmal, auch neue, die später beitreten.';
+}
+$('#addForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $('#addName').value.trim();
+  const code = S.code || $('#addCode').value.trim().toLowerCase();
+  const msg = $('#addMsg');
+  if (!name) { showMsg(msg, 'err', S.mode === 'char' ? 'Bitte gib Vor- und Nachnamen ein.' : 'Bitte gib den Gildennamen ein.'); return; }
+  if (!code) { showMsg(msg, 'err', 'Bitte gib den Gruppencode ein. Er steht im Einladungslink.'); return; }
+  $('#addGo').disabled = true; showMsg(msg, 'ok', 'Frage bei Blizzard nach …');
+  const r = await call({ action: S.mode === 'char' ? 'add' : 'addGuild', name, region: S.region, code });
+  $('#addGo').disabled = false;
+  if (!r.ok) { showMsg(msg, 'err', r.error || 'Das hat nicht geklappt.'); return; }
+  if (!S.code) { S.code = code; store('fr_code', code); }
+  $('#addName').value = '';
+  if (S.mode === 'guild') showMsg(msg, 'ok', `Gilde <${r.guild}> eingetragen: ${r.members} Mitglieder. Ihre Profile kommen in den nächsten Minuten dazu.`);
+  else if (r.state === 'ok') { $('#addDlg').close(); await load().catch(() => {}); openSheet(r.id); }
+  else showMsg(msg, 'ok', 'Eingetragen! Blizzard kennt den Charakter noch nicht. Das passiert unter Stufe 10 oder bei einem Tippfehler. Wir schauen alle 5 Minuten nach.');
+});
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+document.querySelectorAll('[data-r]').forEach(b => b.addEventListener('click', () => {
+  S.region = b.dataset.r; document.querySelectorAll('[data-r]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+}));
+
+function openInvite() {
+  $('#inviteLinkWrap').hidden = !S.code; $('#inviteCodeWrap').hidden = !!S.code;
+  $('#inviteLink').value = inviteLink(); $('#copyBtn').textContent = 'Kopieren';
+  $('#inviteDlg').showModal();
+}
+$('#inviteCode').addEventListener('input', e => {
+  const c = e.target.value.trim().toLowerCase();
+  if (CODE_RE.test(c)) { S.code = c; store('fr_code', c); openInvite(); }
+});
+$('#copyBtn').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(inviteLink()); $('#copyBtn').textContent = 'Kopiert'; }
+  catch { $('#inviteLink').select(); $('#copyBtn').textContent = 'Markiert, jetzt Strg+C'; }
+});
+
+async function removeMember(id, btn) {
+  const m = S.members.get(id);
+  const wrap = btn.closest('#rmWrap');
+  if (wrap && !btn.dataset.sure) {
+    wrap.innerHTML = `<span>${esc(fullName(m))} wirklich entfernen? </span><button class="linkbtn" type="button" data-remove="${id}" data-sure="1">Ja, entfernen</button>`;
+    return;
+  }
+  if (!S.code) { alertBox('Zum Entfernen brauchst du den Einladungslink mit Gruppencode.'); return; }
+  const r = await call({ action: 'remove', id, code: S.code });
+  if (!r.ok) { alertBox(r.error); return; }
+  S.members.delete(id); if (S.open === id) $('#sheetDlg').close(); render();
+}
+function alertBox(text) { const w = $('#rmWrap') || $('#waiting'); if (w) w.insertAdjacentHTML('beforeend', `<div class="msg err">${esc(text)}</div>`); }
+
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t.closest('[data-close]')) { t.closest('dialog').close(); return; }
+  if (t.closest('[data-add]')) { openAdd(); return; }
+  const rm = t.closest('[data-remove]'); if (rm) { removeMember(+rm.dataset.remove, rm); return; }
+  const op = t.closest('[data-open]'); if (op) { openSheet(+op.dataset.open); return; }
+  const row = t.closest('.row'); if (row) { openSheet(+row.dataset.id); return; }
+  if (t.tagName === 'DIALOG') t.close(); // Klick auf den abgedunkelten Rand
+});
+$('#roster').addEventListener('keydown', e => { const row = e.target.closest('.row'); if (row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openSheet(+row.dataset.id); } });
+document.querySelector('.chattabs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.tab = b.dataset.t; document.querySelectorAll('.chattabs button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); renderFeed();
+});
+$('#addBtn').onclick = openAdd;
+$('#inviteBtn').onclick = openInvite;
+addEventListener('resize', () => renderRace());
+
+// ---------- Start ----------
+render();
+load().then(subscribe).catch(e => { console.error(e); $('#fresh').textContent = 'Keine Verbindung zur Datenbank. Lade die Seite gleich neu.'; });
+call({ action: 'refresh' });            // fragt bei Blizzard nach, wenn die Daten älter als ein paar Minuten sind
+setInterval(render, 60e3);              // "vor X Min" aktuell halten
+setInterval(() => call({ action: 'refresh' }), 5 * 60e3);
+</script>
+</body>
+</html>
